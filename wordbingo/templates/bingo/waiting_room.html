@@ -1,0 +1,282 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Sala de Espera | Bingo</title>
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    background: #f5e9d3;
+    font-family: "Trebuchet MS", sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+
+  .wrapper {
+    width: 95%;
+    max-width: 900px;
+    background: #fffdf7;
+    border-radius: 22px;
+    border: 3px solid #3a2f25;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.25);
+    padding: 35px 30px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 2rem;
+    color: #3a2f25;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    text-align: center;
+    font-size: 0.95rem;
+    color: #4b3a2c;
+    margin-bottom: 22px;
+  }
+
+  .timer-box {
+    background: #fff8e3;
+    border-radius: 18px;
+    border: 2px solid #3a2f25;
+    padding: 16px 18px 18px;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  .timer-title {
+    font-weight: 800;
+    font-size: 1rem;
+    color: #3a2f25;
+    margin-bottom: 6px;
+  }
+
+  .timer-value {
+    font-size: 2.4rem;
+    font-weight: 900;
+    color: #f28c28;
+    margin-bottom: 8px;
+  }
+
+  .timer-text {
+    font-size: 0.9rem;
+    color: #4b3a2c;
+  }
+
+  .host-btn {
+    display: none;
+    padding: 12px 24px;
+    background: #8cc63f;
+    color: white;
+    border-radius: 999px;
+    border: 3px solid #3a2f25;
+    box-shadow: 0 5px 0 #3a2f25;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.15s;
+    margin: 10px auto 18px;
+  }
+
+  .host-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 7px 0 #3a2f25;
+  }
+
+  .players-box {
+    background: #fff8e3;
+    border-radius: 18px;
+    border: 2px solid #3a2f25;
+    padding: 15px;
+    margin-top: 6px;
+  }
+
+  .players-title {
+    font-weight: 800;
+    color: #3a2f25;
+    margin-bottom: 10px;
+    font-size: 1.05rem;
+  }
+
+  .players-list {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .player-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+    border-bottom: 1px solid #e0c99d;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    background: #f28c28;
+    border-radius: 50%;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 800;
+    border: 2px solid #3a2f25;
+    box-shadow: 0 3px 0 #3a2f25;
+  }
+
+  .footer {
+    margin-top: 22px;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+
+  .footer a {
+    color: #f28c28;
+    font-weight: 700;
+    text-decoration: none;
+  }
+</style>
+</head>
+
+<body>
+<div
+  class="wrapper"
+  id="waiting-root"
+  data-room-id="{{ room.id }}"
+  data-is-host="{{ is_host|yesno:'true,false' }}"
+>
+  <h1>Sala de Espera</h1>
+  <p class="subtitle">
+    Sala: <strong>{{ room.name }}</strong> · ID: {{ room.id }}
+  </p>
+
+  <!-- CONTADOR -->
+  <div class="timer-box">
+    <div class="timer-title">La partida comenzará en</div>
+    <div class="timer-value" id="timer">...</div>
+    <div class="timer-text" id="status-text">
+      Cuando el contador llegue a cero, el host podrá iniciar la partida.
+    </div>
+  </div>
+
+  <!-- BOTÓN SOLO HOST -->
+  <button id="start-btn" class="host-btn">Empezar partida</button>
+
+  <!-- JUGADORES -->
+  <div class="players-box">
+    <div class="players-title">Jugadores en la sala</div>
+    <ul class="players-list" id="players-list"></ul>
+  </div>
+
+  <div class="footer">
+    <a href="{% url 'bingo:lobby' %}">← Volver al lobby</a>
+  </div>
+</div>
+
+<script>
+  const root       = document.getElementById("waiting-root");
+  const roomId     = root.dataset.roomId;
+  const isHost     = root.dataset.isHost === "true";
+  const csrftoken  = "{{ csrf_token }}";
+  const startUrl   = "{% url 'bingo:start_game' room.id %}";
+
+  const timerEl       = document.getElementById("timer");
+  const statusTextEl  = document.getElementById("status-text");
+  const playersListEl = document.getElementById("players-list");
+  const startBtn      = document.getElementById("start-btn");
+
+  async function refreshStatus() {
+    try {
+      const resp = await fetch(`/bingo/rooms/${roomId}/status/`);
+      if (!resp.ok) {
+        console.error("Error status:", resp.status);
+        return;
+      }
+      const data = await resp.json();
+
+      // contador
+      timerEl.textContent = data.remaining_seconds;
+
+      // texto descriptivo
+      if (data.status === "waiting") {
+        if (data.remaining_seconds > 5) {
+          statusTextEl.textContent =
+            "Cuando el contador llegue a cero, el host podrá iniciar la partida para todos.";
+        } else if (data.remaining_seconds > 0) {
+          statusTextEl.textContent = "¡Atención! La partida está a punto de comenzar…";
+        } else {
+          statusTextEl.textContent =
+            "El tiempo de espera terminó. El host puede iniciar la partida cuando esté listo.";
+        }
+      } else if (data.status === "running") {
+        statusTextEl.textContent = "La partida ha comenzado.";
+      }
+
+      // jugadores
+      playersListEl.innerHTML = "";
+      data.players.forEach(name => {
+        const li = document.createElement("li");
+        li.className = "player-item";
+
+        const avatar = document.createElement("div");
+        avatar.className = "avatar";
+        avatar.textContent = name.charAt(0).toUpperCase();
+
+        const span = document.createElement("span");
+        span.textContent = name;
+
+        li.appendChild(avatar);
+        li.appendChild(span);
+        playersListEl.appendChild(li);
+      });
+
+      // si la sala está en running → ir al game
+      if (data.status === "running") {
+        window.location.href = `/bingo/rooms/${roomId}/game/`;
+        return;
+      }
+
+      // mostrar botón "Empezar partida" solo al host cuando el contador llegue a 0
+      if (isHost && data.status === "waiting" && data.remaining_seconds <= 0) {
+        startBtn.style.display = "block";
+      } else {
+        startBtn.style.display = "none";
+      }
+
+    } catch (e) {
+      console.error("Error leyendo estado:", e);
+    }
+  }
+
+  refreshStatus();
+  setInterval(refreshStatus, 1000);
+
+  // Host: iniciar partida
+  startBtn.addEventListener("click", async () => {
+    try {
+      const resp = await fetch(startUrl, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": csrftoken,
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      });
+      if (!resp.ok) {
+        console.error("Error al iniciar partida:", resp.status);
+      }
+    } catch (e) {
+      console.error("Error al iniciar partida:", e);
+    }
+  });
+</script>
+
+</body>
+</html>

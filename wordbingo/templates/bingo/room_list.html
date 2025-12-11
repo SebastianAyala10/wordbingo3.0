@@ -1,0 +1,108 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Salas disponibles | Bingo</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    min-height:100vh;background:#f5e9d3;
+    display:flex;justify-content:center;align-items:center;
+    font-family:"Trebuchet MS",system-ui;
+  }
+  .card{
+    width:92%;max-width:950px;background:#fffdf7;
+    padding:46px 40px 34px;
+    border-radius:22px;border:3px solid #3a2f25;
+    box-shadow:0 18px 50px rgba(0,0,0,.25);
+  }
+  .bingo-title{
+    display:flex;justify-content:center;gap:12px;margin-bottom:12px;
+  }
+  .tile{
+    width:50px;height:50px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.6rem;font-weight:900;color:#fff;
+    border:3px solid #3a2f25;box-shadow:0 4px 0 #3a2f25;
+  }
+  .t-orange{background:#f28c28;} .t-green{background:#8cc63f;}
+  h2{text-align:center;color:#3a2f25;font-weight:800;margin-top:4px;margin-bottom:6px;}
+  .subtitle{text-align:center;font-size:.95rem;color:#4b3a2c;margin-bottom:18px;}
+  .room-grid{
+    margin-top:10px;display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;
+  }
+  .room-card{
+    background:#fff8e9;border-radius:14px;
+    border:2px solid #3a2f25;padding:12px 14px 14px;
+    box-shadow:0 6px 0 #3a2f25;display:flex;flex-direction:column;gap:4px;
+  }
+  .room-name{font-weight:800;color:#3a2f25;font-size:.98rem;}
+  .room-meta{font-size:.85rem;color:#4b3a2c;line-height:1.4;}
+  .status-pill{
+    display:inline-block;margin-top:4px;padding:2px 8px;
+    border-radius:999px;border:2px solid #3a2f25;
+    background:#8cc63f;color:#fff;font-size:.75rem;font-weight:700;
+  }
+  .btn-join{
+    margin-top:8px;padding:8px 14px;border-radius:999px;
+    background:#f28c28;color:#fff;font-weight:700;font-size:.9rem;
+    text-align:center;text-decoration:none;
+    border:3px solid #3a2f25;box-shadow:0 4px 0 #3a2f25;
+    transition:.15s;
+  }
+  .btn-join:hover{transform:translateY(-3px);box-shadow:0 7px 0 #3a2f25;}
+  .empty{text-align:center;margin-top:20px;font-size:.95rem;color:#4b3a2c;}
+  .footer{text-align:center;margin-top:20px;font-size:.88rem;color:#4b3a2c;}
+  .footer a{color:#f28c28;font-weight:700;text-decoration:none;}
+  .footer a:hover{text-decoration:underline;}
+  @media(max-width:768px){.card{padding:38px 18px 28px;}}
+</style>
+</head>
+<body>
+<div class="card">
+
+  <div class="bingo-title">
+    <div class="tile t-orange">B</div>
+    <div class="tile t-green">I</div>
+    <div class="tile t-orange">N</div>
+    <div class="tile t-green">G</div>
+    <div class="tile t-orange">O</div>
+  </div>
+
+  <h2>Salas disponibles</h2>
+  <p class="subtitle">
+    Elige una sala en espera para unirte a la partida.
+  </p>
+
+  {% if rooms %}
+    <div class="room-grid">
+      {% for room in rooms %}
+        <div class="room-card">
+          <div class="room-name">{{ room.name }}</div>
+          <div class="room-meta">
+            Host: {{ room.host.username|default:"-" }}<br>
+            Jugadores: {{ room.players.count }}<br>
+            ID sala: {{ room.id }}
+          </div>
+          <span class="status-pill">{{ room.get_status_display }}</span>
+          <a href="{% url 'bingo:waiting_room' room.id %}" class="btn-join">
+            Unirme a esta sala
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="empty">
+      No hay salas esperando por ahora. Crea una nueva desde el lobby.
+    </p>
+  {% endif %}
+
+  <div class="footer">
+    <a href="{% url 'bingo:lobby' %}">← Volver al lobby</a>
+  </div>
+
+</div>
+</body>
+</html>

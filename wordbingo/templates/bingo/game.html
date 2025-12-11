@@ -1,0 +1,837 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Bingo · Partida</title>
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    background: #f5e9d3;
+    font-family: "Trebuchet MS", system-ui, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+  }
+
+  .wrapper {
+    width: 95%;
+    max-width: 1120px;
+    background: #fffdf7;
+    border-radius: 22px;
+    border: 3px solid #3a2f25;
+    box-shadow: 0 18px 50px rgba(0,0,0,0.25);
+    padding: 32px 30px 26px;
+  }
+
+  .top-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 0.9rem;
+    color: #4b3a2c;
+    margin-bottom: 6px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 2rem;
+    color: #3a2f25;
+    margin-bottom: 4px;
+    font-weight: 900;
+  }
+
+  .subtitle {
+    text-align: center;
+    font-size: 0.95rem;
+    color: #4b3a2c;
+    margin-bottom: 18px;
+  }
+
+  .pattern-badge {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+  .pattern-badge span {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 2px solid #3a2f25;
+    background: #fff8e3;
+    color: #3a2f25;
+    font-size: 0.9rem;
+    font-weight: 800;
+  }
+
+  .pattern-preview {
+    margin-top: 4px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .pattern-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 12px);
+    gap: 3px;
+    margin-top: 4px;
+  }
+
+  .pattern-cell {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    background: #e4d4b6;
+    border: 1px solid #c9b68e;
+  }
+
+  .pattern-cell.on {
+    background: #8cc63f;
+    border-color: #3a2f25;
+    animation: pattern-pulse 0.8s ease-in-out infinite alternate;
+  }
+
+  @keyframes pattern-pulse {
+    0% { transform: scale(1); opacity: 0.85; }
+    100% { transform: scale(1.25); opacity: 1; }
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 26px;
+    margin-top: 8px;
+  }
+
+  /* CARTÓN ---------------------- */
+
+  .card-container {
+    background: #fff8e3;
+    border-radius: 18px;
+    border: 2px solid #3a2f25;
+    box-shadow: 0 8px 0 #3a2f25;
+    padding: 18px 18px 20px;
+  }
+
+  .card-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #3a2f25;
+    margin-bottom: 8px;
+  }
+
+  .card-grid {
+    margin-top: 8px;
+  }
+
+  .card-header {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  .header-cell {
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: #ffffff;
+    border: 3px solid #3a2f25;
+    box-shadow: 0 4px 0 #3a2f25;
+  }
+
+  .h-b { background: #f28c28; }
+  .h-i { background: #8cc63f; }
+  .h-n { background: #f28c28; }
+  .h-g { background: #8cc63f; }
+  .h-o { background: #f28c28; }
+
+  .card-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  .cell {
+    position: relative;
+    height: 58px;
+    border-radius: 10px;
+    border: 2px solid #3a2f25;
+    background: #fffaf1;
+    box-shadow: 0 3px 0 #3a2f25;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #3a2f25;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease, background .2s ease, color .2s ease;
+    overflow: hidden;
+  }
+
+  .cell:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 0 #3a2f25;
+  }
+
+  .cell.marked {
+    background: #f28c28;
+    color: #ffffff;
+    box-shadow: 0 0 0 #3a2f25;
+    transform: translateY(2px) scale(.97);
+  }
+
+  .cell.marked::after {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border-radius: 999px;
+    border: 3px solid rgba(255,255,255,0.8);
+    box-shadow: inset 0 0 0 2px rgba(58,47,37,0.4);
+    animation: chip-pop .25s ease-out;
+    pointer-events: none;
+  }
+
+  @keyframes chip-pop {
+    0% { transform: scale(.4); opacity: 0; }
+    70% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* PANEL DERECHO ---------------- */
+
+  .info-panel {
+    background: #fff8e3;
+    border-radius: 18px;
+    border: 2px solid #3a2f25;
+    box-shadow: 0 8px 0 #3a2f25;
+    padding: 16px 18px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .current-word-box {
+    padding: 14px 14px 16px;
+    border-radius: 14px;
+    border: 2px solid #3a2f25;
+    background: #f28c28;
+    color: #fff;
+    box-shadow: 0 4px 0 #3a2f25;
+  }
+
+  .current-label {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+    opacity: .9;
+  }
+
+  .current-word {
+    margin-top: 6px;
+    font-size: 1.9rem;
+    font-weight: 900;
+    text-align: center;
+    animation: word-pop .35s ease-out;
+  }
+
+  @keyframes word-pop {
+    0% { transform: translateY(8px) scale(.9); opacity: 0; }
+    70% { transform: translateY(-3px) scale(1.05); opacity: 1; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  .called-box {
+    flex: 1;
+    border-radius: 14px;
+    border: 2px solid #3a2f25;
+    background: #fffdf6;
+    padding: 10px 12px;
+  }
+
+  .called-title {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #3a2f25;
+    margin-bottom: 6px;
+  }
+
+  .called-list {
+    max-height: 210px;
+    overflow-y: auto;
+    list-style: none;
+    padding-left: 0;
+    font-size: 0.9rem;
+    color: #4b3a2c;
+  }
+
+  .called-list li {
+    padding: 3px 0;
+    border-bottom: 1px solid #ead3a9;
+  }
+
+  .buttons {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .btn-main {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 999px;
+    border: 3px solid #3a2f25;
+    background: #8cc63f;
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.98rem;
+    box-shadow: 0 4px 0 #3a2f25;
+    cursor: pointer;
+    transition: .15s;
+  }
+
+  .btn-main:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 0 #3a2f25;
+  }
+
+  .btn-secondary {
+    width: 100%;
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 3px solid #3a2f25;
+    background: #f28c28;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 0 #3a2f25;
+    cursor: pointer;
+    transition: .15s;
+  }
+
+  .btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 0 #3a2f25;
+  }
+
+  .links-row {
+    margin-top: 10px;
+    font-size: 0.85rem;
+    text-align: center;
+    color: #4b3a2c;
+  }
+  .links-row a {
+    color: #f28c28;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .links-row a:hover { text-decoration: underline; }
+
+  /* MINI OVERLAY (FORMA) ----------------------- */
+  #pattern-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.55);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 200;
+    transition: opacity .35s ease;
+  }
+
+  #pattern-overlay .card {
+    background: #fffdf7;
+    border: 3px solid #3a2f25;
+    border-radius: 18px;
+    padding: 24px 26px;
+    max-width: 360px;
+    box-shadow: 0 16px 40px rgba(0,0,0,.4);
+    text-align: center;
+  }
+
+  /* OVERLAY GANADOR */
+  #winner-overlay {
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.65);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .3s ease;
+    z-index:250;
+  }
+
+  .winner-card {
+    background: radial-gradient(circle at top, #fffdf7 0%, #fff5d7 40%, #ffe7b5 100%);
+    border:3px solid #3a2f25;
+    border-radius:22px;
+    padding:26px 30px 22px;
+    max-width:420px;
+    text-align:center;
+    box-shadow:0 18px 40px rgba(0,0,0,.55);
+    position:relative;
+    overflow:hidden;
+  }
+
+  .winner-card::before,
+  .winner-card::after {
+    content:"";
+    position:absolute;
+    width:120px;
+    height:120px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.3);
+    filter:blur(2px);
+    z-index:-1;
+  }
+
+  .winner-card::before {
+    top:-40px;
+    left:-20px;
+  }
+
+  .winner-card::after {
+    bottom:-50px;
+    right:-10px;
+  }
+
+  .winner-trophy {
+    width:70px;
+    height:70px;
+    border-radius:50%;
+    background:linear-gradient(135deg, #ffcc4d, #f28c28);
+    border:3px solid #3a2f25;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:2.2rem;
+    margin:0 auto 10px;
+    box-shadow:0 6px 0 #3a2f25;
+  }
+
+  .winner-title {
+    font-size:1.4rem;
+    color:#3a2f25;
+    font-weight:900;
+    margin-bottom:6px;
+  }
+
+  .winner-name {
+    font-size:1.1rem;
+    font-weight:900;
+    color:#3a2f25;
+  }
+
+  .winner-text {
+    color:#4b3a2c;
+    margin-bottom:4px;
+  }
+
+  .winner-subtext {
+    color:#4b3a2c;
+    font-size:.9rem;
+  }
+
+  .winner-actions {
+    margin-top:12px;
+    display:flex;
+    justify-content:center;
+    gap:10px;
+  }
+
+  .winner-btn {
+    padding:8px 14px;
+    border-radius:999px;
+    border:2px solid #3a2f25;
+    background:#ffb74d;
+    color:#3a2f25;
+    font-weight:800;
+    font-size:0.9rem;
+    cursor:pointer;
+    text-decoration:none;
+    box-shadow:0 4px 0 #3a2f25;
+    transition:.15s;
+  }
+
+  .winner-btn.secondary {
+    background:#fffdf7;
+  }
+
+  .winner-btn:hover {
+    transform:translateY(-2px);
+    box-shadow:0 6px 0 #3a2f25;
+  }
+
+  .winner-btn:active {
+    transform:translateY(1px);
+    box-shadow:0 2px 0 #3a2f25;
+  }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .wrapper { padding: 24px 16px 20px; }
+  }
+</style>
+</head>
+
+<body data-pattern="{{ pattern_name|default:'linea_completa' }}">
+<div class="wrapper">
+
+  <div class="top-info">
+    <span>Sala <strong>{{ room.id }}</strong> · {{ room.name }}</span>
+    <span>Jugador: <strong>{{ request.user.username }}</strong></span>
+  </div>
+
+  <h1>Bingo de Palabras</h1>
+  <p class="subtitle">
+    Marca las palabras de tu cartón a medida que se vayan cantando.
+  </p>
+
+  <!-- BADGE + MINI PREVIEW -->
+  <div class="pattern-badge">
+    <span>
+      Forma de esta partida:
+      <strong id="pattern-label">{{ pattern_label }}</strong>
+    </span>
+    <div class="pattern-preview">
+      <div class="pattern-grid" id="pattern-grid">
+        {% for _ in "xxxxxxxxxxxxxxxxxxxxxxxxx" %}
+          <div class="pattern-cell"></div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- CARTÓN -->
+    <div class="card-container">
+      <div class="card-title">Tu cartón de bingo</div>
+
+      <div class="card-grid">
+        <div class="card-header">
+          <div class="header-cell h-b">B</div>
+          <div class="header-cell h-i">I</div>
+          <div class="header-cell h-n">N</div>
+          <div class="header-cell h-g">G</div>
+          <div class="header-cell h-o">O</div>
+        </div>
+
+        {% for row in card.rows %}
+        <div class="card-row">
+          {% for word in row %}
+          <button type="button" class="cell" data-word="{{ word }}">
+            {{ word }}
+          </button>
+          
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- PANEL DERECHO -->
+    <div class="info-panel">
+
+      <div class="current-word-box">
+        <div class="current-label">Palabra actual</div>
+        <div class="current-word" id="current-word">
+          {% if game.called_words %}
+            {{ game.called_words|last }}
+          {% else %}
+            ...
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="called-box">
+        <div class="called-title">Palabras cantadas</div>
+        <ul class="called-list" id="called-list">
+          {% if game.called_words %}
+            {% for w in game.called_words %}
+              <li>{{ w }}</li>
+            {% endfor %}
+          {% else %}
+            <li>Todavía no se han cantado palabras.</li>
+          {% endif %}
+        </ul>
+      </div>
+
+      <div class="buttons">
+        <!-- BINGO PARA TODOS -->
+        <button class="btn-main" type="button" id="bingo-btn">
+          ¡BINGO!
+        </button>
+
+        {% if request.user == room.host %}
+        <button class="btn-secondary" type="button" id="next-word-btn">
+          Siguiente palabra
+        </button>
+        {% endif %}
+
+        <form method="post" action="{% url 'bingo:finish_game' room.id %}">
+          {% csrf_token %}
+          <button class="btn-secondary" type="submit">
+            Finalizar partida
+          </button>
+        </form>
+      </div>
+
+      <div class="links-row">
+        <a href="{% url 'bingo:waiting_room' room.id %}">← Volver a la sala de espera</a> ·
+        <a href="{% url 'bingo:lobby' %}">Volver al lobby</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MINI OVERLAY FORMA -->
+<div id="pattern-overlay">
+  <div class="card">
+    <h2 style="color:#3a2f25; margin-bottom:10px;">¡Prepárate!</h2>
+    <p style="color:#4b3a2c; margin-bottom:10px;">
+      Esta partida se juega con la forma:
+    </p>
+    <div style="
+      display:inline-block;
+      padding:8px 16px;
+      border-radius:999px;
+      background:#f28c28;
+      color:#fff;
+      font-weight:900;
+      font-size:1rem;
+      margin-bottom:10px;">
+      {{ pattern_label }}
+    </div>
+
+    <p style="color:#4b3a2c; font-size:.9rem; margin-bottom:10px;">
+      Completa esta forma en tu cartón para cantar ¡BINGO!.
+    </p>
+
+    <div class="pattern-preview">
+      <div class="pattern-grid" id="pattern-grid-overlay">
+        {% for _ in "xxxxxxxxxxxxxxxxxxxxxxxxx" %}
+          <div class="pattern-cell"></div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY GANADOR -->
+<div id="winner-overlay">
+  <div class="winner-card">
+    <div class="winner-trophy">🏆</div>
+    <div class="winner-title">¡BINGO!</div>
+
+    <p class="winner-text">
+      <span id="winner-name" class="winner-name"></span>
+      ha cantado bingo.
+    </p>
+
+    <p class="winner-subtext">
+      La partida ha terminado. Puedes volver al lobby o iniciar otra ronda.
+    </p>
+
+    <div class="winner-actions">
+      <a href="{% url 'bingo:lobby' %}" class="winner-btn">Ir al lobby</a>
+      <a href="{% url 'bingo:home' %}" class="winner-btn secondary">Volver al inicio</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const roomId     = "{{ room.id }}";
+  const apiUrl     = "{% url 'bingo:game_state_api' room.id %}";
+  const nextUrl    = "{% url 'bingo:call_next_word' room.id %}";
+  const bingoUrl   = "{% url 'bingo:claim_bingo' room.id %}";
+  const csrftoken  = "{{ csrf_token }}";
+  const patternName = document.body.dataset.pattern || "linea_completa";
+
+  // Marcar casillas
+  document.querySelectorAll(".cell").forEach(cell => {
+    cell.addEventListener("click", () => {
+      cell.classList.toggle("marked");
+    });
+  });
+
+  // Mapa de patrones (5x5 -> índices 0..24)
+  const patternMap = {
+    linea_completa: Array.from({length: 25}, (_, i) => i),
+    t: (() => {
+      let arr = [];
+      for (let c = 0; c < 5; c++) arr.push(0 * 5 + c);
+      for (let r = 1; r < 5; r++) arr.push(r * 5 + 2);
+      return arr;
+    })(),
+    x: (() => {
+      let arr = [];
+      for (let i = 0; i < 5; i++) {
+        arr.push(i * 5 + i);
+        arr.push(i * 5 + (4 - i));
+      }
+      return Array.from(new Set(arr));
+    })(),
+    l: (() => {
+      let arr = [];
+      for (let r = 0; r < 5; r++) arr.push(r * 5 + 0);
+      for (let c = 1; c < 5; c++) arr.push(4 * 5 + c);
+      return arr;
+    })(),
+  };
+
+  function paintPatternPreview(gridElement) {
+    if (!gridElement) return;
+    const cellsPrev = gridElement.querySelectorAll(".pattern-cell");
+    const indices = patternMap[patternName] || [];
+    indices.forEach(i => {
+      if (cellsPrev[i]) cellsPrev[i].classList.add("on");
+    });
+  }
+
+  paintPatternPreview(document.getElementById("pattern-grid"));
+  paintPatternPreview(document.getElementById("pattern-grid-overlay"));
+
+  // Overlay forma al entrar
+  window.addEventListener("load", () => {
+    const overlay = document.getElementById("pattern-overlay");
+    overlay.style.opacity = "1";
+    overlay.style.pointerEvents = "auto";
+    setTimeout(() => {
+      overlay.style.opacity = "0";
+      overlay.style.pointerEvents = "none";
+    }, 2500);
+  });
+
+  // Actualizar estado del juego
+  const calledListEl = document.getElementById("called-list");
+  const currentWordEl = document.getElementById("current-word");
+  const winnerOverlay = document.getElementById("winner-overlay");
+  const winnerNameSpan = document.getElementById("winner-name");
+  const bingoBtn = document.getElementById("bingo-btn");
+
+  function showWinnerOverlay(name) {
+    if (winnerNameSpan) winnerNameSpan.textContent = name || "Alguien";
+    if (winnerOverlay) {
+      winnerOverlay.style.opacity = "1";
+      winnerOverlay.style.pointerEvents = "auto";
+    }
+  }
+
+  async function refreshGameState() {
+    try {
+      const res = await fetch(apiUrl);
+      if (!res.ok) return;
+      const data = await res.json();
+
+      if (data.last_word) {
+        currentWordEl.textContent = data.last_word;
+        currentWordEl.style.animation = "none";
+        void currentWordEl.offsetWidth;
+        currentWordEl.style.animation = "word-pop .35s ease-out";
+      }
+
+      calledListEl.innerHTML = "";
+      if (data.called_words && data.called_words.length > 0) {
+        data.called_words.forEach(w => {
+          const li = document.createElement("li");
+          li.textContent = w;
+          calledListEl.appendChild(li);
+        });
+      } else {
+        const li = document.createElement("li");
+        li.textContent = "Todavía no se han cantado palabras.";
+        calledListEl.appendChild(li);
+      }
+
+      if (data.winner) {
+        showWinnerOverlay(data.winner);
+        if (bingoBtn) bingoBtn.disabled = true;
+        const nb = document.getElementById("next-word-btn");
+        if (nb) nb.disabled = true;
+      }
+
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  refreshGameState();
+  setInterval(refreshGameState, 1500);
+
+  // Botón "Siguiente palabra" (solo host lo ve)
+  const nextBtn = document.getElementById("next-word-btn");
+  if (nextBtn) {
+    nextBtn.addEventListener("click", async () => {
+      try {
+        const res = await fetch(nextUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken,
+            "X-Requested-With": "XMLHttpRequest"
+          },
+          body: JSON.stringify({})
+        });
+        if (!res.ok) {
+          console.error("Error siguiente palabra:", res.status);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    });
+  }
+
+  // Botón BINGO
+  if (bingoBtn) {
+    bingoBtn.addEventListener("click", async () => {
+      try {
+        const res = await fetch(bingoUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken,
+            "X-Requested-With": "XMLHttpRequest"
+          },
+          body: JSON.stringify({})
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.ok) {
+          alert(data.error || "No se pudo cantar bingo.");
+          return;
+        }
+
+        showWinnerOverlay(data.winner);
+        bingoBtn.disabled = true;
+        const nb = document.getElementById("next-word-btn");
+        if (nb) nb.disabled = true;
+
+      } catch (e) {
+        console.error("Error al cantar bingo:", e);
+      }
+    });
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,106 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Bingo de Palabras</title>
+
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+
+  body{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:#f5e9d3;
+    font-family:"Trebuchet MS",system-ui;
+  }
+
+  .card{
+    width:85%;
+    max-width:1000px;
+    background:#fffdf7;
+    padding:60px 40px;
+    border-radius:20px;
+    border:3px solid #3a2f25;
+    box-shadow:0 18px 50px rgba(0,0,0,.25);
+    opacity:0;
+    transform:translateY(35px) scale(.96);
+    animation:cardIn .9s ease-out forwards;
+  }
+
+  @keyframes cardIn{
+    0%{opacity:0;transform:translateY(35px) scale(.94);}
+    60%{opacity:1;transform:translateY(-6px) scale(1.02);}
+    100%{opacity:1;transform:translateY(0) scale(1);}
+  }
+
+  .bingo-title{
+    display:flex;
+    justify-content:center;
+    gap:14px;
+    margin-bottom:12px;
+  }
+
+  .tile{
+    width:75px;height:75px;
+    border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:2.2rem;font-weight:900;color:#fff;
+    border:3px solid #3a2f25;
+    box-shadow:0 6px 0 #3a2f25;
+    opacity:0;transform:translateY(20px) scale(.8);
+    animation:tilePop .4s ease-out forwards;
+  }
+
+  @keyframes tilePop{
+    0%{opacity:0;transform:translateY(20px) scale(.8);}
+    70%{opacity:1;transform:translateY(-4px) scale(1.08);}
+    100%{opacity:1;transform:translateY(0) scale(1);}
+  }
+
+  .t-orange{background:#f28c28;}
+  .t-green{background:#8cc63f;}
+
+  .subtitle{text-align:center;color:#3a2f25;margin-top:10px;line-height:1.4;}
+  .big-title{text-align:center;margin-top:25px;font-size:2.6rem;font-weight:800;color:#3a2f25;}
+
+  .buttons{
+    display:flex;justify-content:center;gap:20px;margin-top:40px;
+  }
+
+  .btn{
+    padding:14px 30px;border-radius:50px;font-size:1rem;font-weight:700;
+    border:3px solid #3a2f25;box-shadow:0 4px 0 #3a2f25;text-decoration:none;
+    color:#fff;transition:.2s;
+  }
+  .btn-primary{background:#f28c28;}
+  .btn-secondary{background:#8cc63f;}
+
+  .btn:hover{transform:translateY(-3px);box-shadow:0 7px 0 #3a2f25;}
+</style>
+</head>
+
+<body>
+  <div class="card">
+
+    <div class="bingo-title">
+      <div class="tile t-orange" style="animation-delay:.1s">B</div>
+      <div class="tile t-green"  style="animation-delay:.2s">I</div>
+      <div class="tile t-orange" style="animation-delay:.3s">N</div>
+      <div class="tile t-green"  style="animation-delay:.4s">G</div>
+      <div class="tile t-orange" style="animation-delay:.5s">O</div>
+    </div>
+
+    <p class="subtitle">Juego de bingo en línea con salas, tiempo y cartones de palabras.</p>
+    <div class="big-title">DE PALABRAS</div>
+
+    <div class="buttons">
+      <a href="{% url 'accounts:register' %}" class="btn btn-primary">Crear cuenta</a>
+      <a href="{% url 'accounts:login' %}" class="btn btn-secondary">Iniciar sesión</a>
+    </div>
+
+  </div>
+</body>
+</html>
