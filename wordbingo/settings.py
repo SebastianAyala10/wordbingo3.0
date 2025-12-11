@@ -34,7 +34,7 @@ CSRF_TRUSTED_ORIGINS = [
 STATIC_URL = "/static/"
 
 STATICFILES_DIRS = [
-   
+   BASE_DIR / "wordbingo" / "static"
 ]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
@@ -68,6 +68,14 @@ CHANNEL_LAYERS = {
         "CONFIG": {"hosts": [("127.0.0.1", 6379)]},
     },
 }
+# Disable WebSockets when running on Azure (no Redis available)
+if not DEBUG:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer"
+        }
+    }
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
